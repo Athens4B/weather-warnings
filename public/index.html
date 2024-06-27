@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather Warnings</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 50px;
+    }
+    .container {
+      display: inline-block;
+      padding: 20px;
+      margin: 10px;
+      border-radius: 0; /* Remove border-radius */
+    }
+    .warning-box {
+      display: inline-block;
+      padding: 10px;
+      border-radius: 0; /* Remove border-radius */
+      color: #000;
+      font-size: 18px;
+      font-weight: bold;
+      text-transform: uppercase; /* Convert text to all caps */
+      margin-right: 0; /* Remove space between warnings */
+      vertical-align: top; /* Align boxes vertically */
+    }
+    .severe-thunderstorm {
+      background-color: yellow;
+    }
+    .tornado {
+      background-color: red;
+    }
+    @keyframes flash-yellow {
+      0%, 100% { background-color: yellow; }
+      50% { background-color: darkgoldenrod; }
+    }
+    @keyframes flash-red {
+      0%, 100% { background-color: red; }
+      50% { background-color: darkred; }
+    }
+    .flash-yellow {
+      animation: flash-yellow 1s infinite;
+    }
+    .flash-red {
+      animation: flash-red 1s infinite;
+    }
+    .flash-yellow.active {
+      animation: flash-yellow 1s infinite; /* Constant flashing effect */
+    }
+    .flash-red.active {
+      animation: flash-red 1s infinite; /* Constant flashing effect */
+    }
+  </style>
+</head>
+<body>
+  <h1>Current Weather Warnings</h1>
+  <div id="warnings" class="container">
+    <p>Loading...</p>
+  </div>
+  <script>
+    let previousSevereThunderstormCount = 0;
+    let previousTornadoWarningCount = 0;
+
+    async function fetchWarnings() {
+      try {
+        const response = await fetch('/warnings');
+        const data = await response.json();
+
+        const warningsDiv = document.getElementById('warnings');
+        warningsDiv.innerHTML = '';
+
+        const severeThunderstormBox = document.createElement('div');
+        severeThunderstormBox.className = `warning-box severe-thunderstorm ${data.severeThunderstormCount !== previousSevereThunderstormCount ? 'flash-yellow active' : ''}`;
+        severeThunderstormBox.innerText = `SEVERE THUNDERSTORM WARNINGS: ${data.severeThunderstormCount}`;
+
+        const tornadoBox = document.createElement('div');
+        tornadoBox.className = `warning-box tornado ${data.tornadoWarningCount !== previousTornadoWarningCount ? 'flash-red active' : ''}`;
+        tornadoBox.innerText = `TORNADO WARNINGS: ${data.tornadoWarningCount}`;
+
+        warningsDiv.appendChild(severeThunderstormBox);
+        warningsDiv.appendChild(tornadoBox);
+
+        // Update previous counts
+        previousSevereThunderstormCount = data.severeThunderstormCount;
+        previousTornadoWarningCount = data.tornadoWarningCount;
+
+        // Remove flashing classes after 7 seconds
+        setTimeout(() => {
+          severeThunderstormBox.classList.remove('flash-yellow', 'active');
+          tornadoBox.classList.remove('flash-red', 'active');
+        }, 7000); // Stop flashing after 7 seconds
+
+      } catch (error) {
+        console.error('Error fetching warnings:', error);
+      }
+    }
+
+    // Fetch warnings on page load
+    fetchWarnings();
+
+    // Refresh warnings every minute
+    setInterval(fetchWarnings, 1 * 60 * 1000);
+  </script>
+</body>
+</html>
